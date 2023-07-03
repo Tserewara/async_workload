@@ -3,45 +3,82 @@
 <head>
     <title>Async Workload</title>
     <style>
-    /* Add some styles to the table */
-    #myTable {
-        border-collapse: collapse;
-        width: 100%;
-    }
+        /* Add some styles to the table */
+        #myTable {
+            border-collapse: collapse;
+            width: 100%;
+        }
 
-    #myTable th,
-    #myTable td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
+        #myTable th,
+        #myTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
 
-    #myTable th {
-        background-color: #f2f2f2;
-    }
+        #myTable th {
+            background-color: #f2f2f2;
+        }
 
-    #myTable tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
+        #myTable tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
 
-    #myTable tr:hover {
-        background-color: #e9e9e9;
-    }
-    .myButton {
-        background-color: #f2f2f2;
-        border: 1px solid #ddd;
-        padding: 8px 16px;
-        cursor: pointer;
-        margin-bottom: 1rem;
-    }
+        #myTable tr:hover {
+            background-color: #e9e9e9;
+        }
 
-    .myButton:hover {
-        background-color: #e9e9e9;
-    }
-</style>
+        .myButton {
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .myButton:hover {
+            background-color: #e9e9e9;
+        }
+
+        /* Add styles to the form */
+        .myForm {
+            margin-bottom: 16px;
+        }
+
+        .myForm input[type="file"] {
+            display: none;
+        }
+
+        .myForm label {
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .myForm label:hover {
+            background-color: #e9e9e9;
+        }
+
+        .myForm input[type="submit"] {
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        .myForm input[type="submit"]:hover {
+            background-color: #e9e9e9;
+        }
+    </style>
 </head>
 <body>
 <h1>Async Workload</h1>
+<form action="/upload" method="post" enctype="multipart/form-data" class="myForm">
+    <label for="file">Choose a file</label>
+    <input type="file" name="file" id="file" accept=".csv">
+    <input type="submit" value="Upload">
+</form>
 <button class="myButton" onclick="runWorkload()">Run workload</button>
 <table id="myTable">
     <thead>
@@ -72,7 +109,6 @@
             source.onmessage = function (event) {
                 const rowToUpdate = document.getElementById(`${task}`)
                 let taskData = JSON.parse(event.data)
-                console.log(taskData)
                 rowToUpdate.innerHTML = `
                         <td>${taskData.id}</td>
                         <td>${taskData.status}</td>
@@ -80,8 +116,7 @@
                         `
                 if (taskData.status === "SUCCESS") {
                     source.close()
-                }
-                else if (taskData.status === "FAILURE") {
+                } else if (taskData.status === "FAILURE") {
                     console.log("FALHA NA TASK", task)
                     source.close()
                 }
@@ -90,7 +125,7 @@
     }
 
     const runWorkload = async () => {
-        const response = await fetch("/longtask", {
+        const response = await fetch("/process_spreadsheet", {
             "method": "POST"
         })
         const tasks = await response.json()
