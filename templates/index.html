@@ -1,34 +1,102 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HTML Table Update</title>
+    <title>Async Workload</title>
+    <style>
+    /* Add some styles to the table */
+    #myTable {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    #myTable th,
+    #myTable td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    #myTable th {
+        background-color: #f2f2f2;
+    }
+
+    #myTable tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    #myTable tr:hover {
+        background-color: #e9e9e9;
+    }
+    .myButton {
+        background-color: #f2f2f2;
+        border: 1px solid #ddd;
+        padding: 8px 16px;
+        cursor: pointer;
+        margin-bottom: 1rem;
+    }
+
+    .myButton:hover {
+        background-color: #e9e9e9;
+    }
+</style>
 </head>
 <body>
-    <h1>HTML Table Update</h1>
-    <table id="myTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Age</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Rows will be dynamically added here -->
-        </tbody>
-    </table>
+<h1>Async Workload</h1>
+<button class="myButton" onclick="runWorkload()">Run workload</button>
+<table id="myTable">
+    <thead>
+    <tr>
+        <th>Task ID</th>
+        <th>Status</th>
+        <th>Result</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Rows will be dynamically added here -->
+    </tbody>
+</table>
 
-    <script>
-        var source = new EventSource("/update_table");
-        source.onmessage = function(event) {
-            if (event.data === "finished") {
-                source.close()
-                return
+<script>
+    const buildTable = (tasks) => {
+        const table = document.getElementById("myTable")
+        for (let task of tasks) {
+            let row = `
+                    <tr id=${task}>
+                        <td>${task}</td>
+                        <td>PENDING</td>
+                        <td>-</td>
+                    </tr>
+                    `
+            table.getElementsByTagName("tbody")[0].innerHTML += row
+            const source = new EventSource(`/status/${task}`)
+            source.onmessage = function (event) {
+                const rowToUpdate = document.getElementById(`${task}`)
+                let taskData = JSON.parse(event.data)
+                console.log(taskData)
+                rowToUpdate.innerHTML = `
+                        <td>${taskData.id}</td>
+                        <td>${taskData.status}</td>
+                        <td><pre>${JSON.stringify(taskData.result)}</pre></td>
+                        `
+                if (taskData.status === "SUCCESS") {
+                    source.close()
+                }
+                else if (taskData.status === "FAILURE") {
+                    console.log("FALHA NA TASK", task)
+                    source.close()
+                }
             }
-            console.log("EVENTO:", event.data)
-            let person = JSON.parse(event.data)
-            let row = `<tr><td>${person.name}</td><td>${person.age}</td></tr>`
-            document.getElementById("myTable").getElementsByTagName("tbody")[0].innerHTML += row
-        };
-    </script>
+        }
+    }
+
+    const runWorkload = async () => {
+        const response = await fetch("/longtask", {
+            "method": "POST"
+        })
+        const tasks = await response.json()
+        buildTable(tasks)
+    }
+
+</script>
 </body>
 </html>

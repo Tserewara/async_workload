@@ -7,5 +7,10 @@
 
 - Run celery worker (intentionally run manually)
 ```shell
-celery -A main.celery_app worker --loglevel=INFO
+celery -A app.celery_app worker --loglevel=INFO
+```
+
+- Run flower to inspect celery
+```shell
+celery -A app.celery_app flower
 ```
